@@ -22,6 +22,11 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
     Type: String
     Default: 10.0.3.0/24
+
+  OnPremGateway:
+    Description: Please enter the IP address of the on-prem VPN Appliance
+    Type: String
+    Default: 1.2.3.4
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -32,61 +37,34 @@ Resources:
         - Key: Name
           Value: !Ref EnvironmentName
 
-  InternetGateway:
-    Type: AWS::EC2::InternetGateway
+  VPCVGW:
+    Type: AWS::EC2::VPNGateway
     Properties:
+      Type: ipsec.1
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Sub "${EnvironmentName} Amazon-side Gateway"
 
-  InternetGatewayAttachment:
+  AttachVpnGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
+      VpnGatewayId: !Ref VPCVGW
 
-  PrivateSubnet1:
-    Type: AWS::EC2::Subnet
+  ONPREMCGW:
+    Type: AWS::EC2::CustomerGateway
     Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: !Ref PrivateSubnet1CIDR
-      MapPublicIpOnLaunch: true
+      Type: ipsec.1
+      BgpAsn: 65000
+      IpAddress: !Ref OnPremGateway
       Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+        - Key: name
+          Value: !Sub "${EnvironmentName} On Prem Gateway"
 
-  PrivateSubnet2:
-    Type: AWS::EC2::Subnet
+  OurVPN:
+    Type: AWS::EC2::VPNConnection
     Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [1, !GetAZs ""]
-      CidrBlock: !Ref PrivateSubnet2CIDR
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
-
-  NatGateway1EIP:
-    Type: AWS::EC2::EIP
-    DependsOn: InternetGatewayAttachment
-    Properties:
-      Domain: vpc
-
-  NatGateway2EIP:
-    Type: AWS::EC2::EIP
-    DependsOn: InternetGatewayAttachment
-    Properties:
-      Domain: vpc
-
-  NatGateway1:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGateway1EIP.AllocationId
-      SubnetId: !Ref PrivateSubnet1
-
-  NatGateway2:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGateway2EIP.AllocationId
-      SubnetId: !Ref PrivateSubnet2
+      Type: ipsec.1
+      StaticRoutesOnly: true
+      CustomerGatewayId: !Ref ONPREMCGW
+      VpnGatewayId: !Ref VPCVGW
