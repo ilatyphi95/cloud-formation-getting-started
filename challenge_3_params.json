@@ -1,3 +1,6 @@
 [
-  
+    {
+		"ParameterKey": "Vpc",
+		"ParameterValue": "vpc-0b06f806500a55717"
+	}
 ]
