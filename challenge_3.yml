@@ -2,6 +2,9 @@ Parameters:
   Vpc:
     Description: Identity of the virtual private container
     Type: String
+  SubnetId:
+    Description: Identity of the private subnet
+    Type: String
 Resources:
   # IAM Role to allow EC2 Session Manager to access our server
   RoleForSSMAccess:
@@ -49,7 +52,25 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-  # # Server EC@Instance
-  # RoleForSSMAccess:
-  #   Type: "AWS::IAM::Instance"
-  #   Properties:
+  # Server EC@Instance
+  ServerInstance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install apache2 -y
+          systemctl start apache2.service
+          cd /var/www/html
+          echo "Udacity Demo Web Server Up and Running!" > index.html
+      ImageId: ami-0022f774911c1d690
+      KeyName: VocareumKey2
+      SecurityGroupIds:
+        - !Ref WebAccessSecurityGroup
+      InstanceType: t3.small
+      SubnetId: !Ref SubnetId
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: "10"
