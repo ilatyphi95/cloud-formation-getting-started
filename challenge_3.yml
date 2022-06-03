@@ -1,0 +1,36 @@
+# Parameters:
+Resources:
+  # IAM Role to allow EC2 Session Manager to access our server
+  RoleForSSMAccess:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
+  # Instance Profile
+  # RoleForSSMAccess:
+  #   Type: "AWS::IAM::InstanceProfile"
+  #   Properties:
+  # # Security Group
+  # WebAccessSecurityGroup:
+  #   Type: "AWS::IAM::SecurityGroup"
+  #   Properties:
+  # # Server EC@Instance
+  # RoleForSSMAccess:
+  #   Type: "AWS::IAM::Instance"
+  #   Properties:
