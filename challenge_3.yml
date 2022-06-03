@@ -23,9 +23,12 @@ Resources:
                 Action: "*"
                 Resource: "*"
   # Instance Profile
-  # RoleForSSMAccess:
-  #   Type: "AWS::IAM::InstanceProfile"
-  #   Properties:
+  ServerInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: /
+      Roles:
+        - !Ref RoleForSSMAccess
   # # Security Group
   # WebAccessSecurityGroup:
   #   Type: "AWS::IAM::SecurityGroup"
